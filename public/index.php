@@ -4,13 +4,9 @@ require_once '../vendor/core/Router.php';
 
 $query = rtrim($_SERVER['REQUEST_URI'], '/');
 
-Router::add('/posts/add', ['controller' => 'Posts', 'action' => 'add']);
-Router::add('/posts', ['controller' => 'Main', 'action' => 'index']);
+Router::add('^$', ['controller' => 'Main', 'action' => 'index']);
+Router::add('^(?P<controller>[a-z-]+)\/?(?P<action>[a-z-]+)?$');
 
-//debug(Router::getRoutes());
-
-if (Router::matchRoute($query)) {
-    debug(Router::getRoute());
-} else {
-    echo '404';
-}
+debug(Router::getRoutes());
+Router::matchRoute($query);
+//Router::dispatch($query);
