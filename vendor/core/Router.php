@@ -1,21 +1,44 @@
 <?php
 
+namespace vendor\core;
 
 class Router
 {
+    /**
+     * Таблица маршрутов
+     * @var array
+     */
     protected static $routes = [];
+
+    /**
+     * Текущий маршрут
+     * @var array
+     */
     protected static $route = [];
 
+    /**
+     * Добавляет маршрут в таблицу маршрутов
+     * @param string $regexp регулярное выражение маршрута
+     * @param array $route маршрут ([controller, action, params])
+     */
     public static function add($regexp, $route = [])
     {
         self::$routes[$regexp] = $route;
     }
 
+    /**
+     * Возвращает таблицу маршрутов
+     * @return array
+     */
     public static function getRoutes()
     {
         return self::$routes;
     }
 
+    /**
+     * Возвращает текущий маршрут (controller, action, [params])
+     * @return array
+     */
     public static function getRoute()
     {
         return self::$route;
@@ -28,10 +51,14 @@ class Router
      */
     public static function dispatch($url)
     {
+        $url = self::removeQueryString($url);
+        var_dump($url);
         if (self::matchRoute($url)) {
-            $controller = self::upperCamelCase(self::$route['controller']);
+            $controllerName = self::$route['controller'];
+            $controller = 'app' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . $controllerName;
+            //debug(self::$route);
             if (class_exists($controller)) {
-                $controllerObject = new $controller;
+                $controllerObject = new $controller(self::$route);
                 $action = self::lowerCamelCase(self::$route['action']) . 'Action';
                 if (method_exists($controllerObject, $action)) {
                     $controllerObject->$action();
@@ -64,6 +91,7 @@ class Router
                 if (!isset($route['action'])) {
                     $route['action'] = 'index';
                 }
+                $route['controller'] = self::upperCamelCase($route['controller']);
                 self::$route = $route;
                 return true;
             }
@@ -79,5 +107,19 @@ class Router
     protected static function lowerCamelCase($name)
     {
         return lcfirst(self::upperCamelCase($name));
+    }
+
+    protected static function removeQueryString($url)
+    {
+        if ($url) {
+            $params = explode('?', explode('&', $url, 2)[0]);
+            debug($params);
+            if (false === strpos($params[0], '=')) {
+                return rtrim($params[0], '/');
+            } else {
+                return '';
+            }
+        }
+        //debug($url);
     }
 }
